@@ -13,6 +13,18 @@ class RegistrationResult {
   });
 }
 
+class DeviceStatusResult {
+  final String deviceId;
+  final DeviceStatus status;
+  final String? token;
+
+  const DeviceStatusResult({
+    required this.deviceId,
+    required this.status,
+    this.token,
+  });
+}
+
 /// Helper untuk alur pendaftaran perangkat ke svc-auth (/auth/v1/register).
 class DeviceRegistration {
   final ApiClient apiClient;
@@ -44,15 +56,22 @@ class DeviceRegistration {
   }
 
   /// Mengecek status persetujuan perangkat ke svc-auth.
-  Future<DeviceStatus> checkStatus(String deviceId) async {
+  Future<DeviceStatusResult> checkStatus(String deviceId) async {
     final response = await apiClient.get('/auth/v1/register/$deviceId/status');
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
-      return _parseStatus(json['status'] as String?);
+      return DeviceStatusResult(
+        deviceId: json['deviceId'] as String? ?? deviceId,
+        status: _parseStatus(json['status'] as String?),
+        token: json['token'] as String?,
+      );
     }
 
-    return DeviceStatus.unknown;
+    return DeviceStatusResult(
+      deviceId: deviceId,
+      status: DeviceStatus.unknown,
+    );
   }
 
   DeviceStatus _parseStatus(String? status) {
