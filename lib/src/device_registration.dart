@@ -1,8 +1,15 @@
 import 'dart:convert';
 import 'api_client.dart';
 
-enum DeviceStatus { pending, approved, revoked, unknown }
+/// Status siklus hidup pendaftaran perangkat.
+enum DeviceStatus {
+  pending,
+  approved,
+  revoked,
+  unknown,
+}
 
+/// Hasil respon pendaftaran perangkat baru.
 class RegistrationResult {
   final String deviceId;
   final DeviceStatus status;
@@ -13,34 +20,43 @@ class RegistrationResult {
   });
 }
 
+/// Detail status persetujuan dan metadata perangkat dari server autentikasi.
 class DeviceStatusResult {
   final String deviceId;
+  final String? name;
   final DeviceStatus status;
+  final DateTime? registeredAt;
   final String? token;
 
   const DeviceStatusResult({
     required this.deviceId,
+    this.name,
     required this.status,
+    this.registeredAt,
     this.token,
   });
 }
 
-/// Helper untuk alur pendaftaran perangkat ke svc-auth (/auth/v1/register).
+/// Klien helper untuk alur pendaftaran perangkat pada endpoint `/auth/v1/register`.
 class DeviceRegistration {
   final ApiClient apiClient;
 
   DeviceRegistration({required this.apiClient});
 
-  /// Mendaftarkan perangkat baru menggunakan nama dan kunci publik.
+  /// Mendaftarkan perangkat baru menggunakan nama perangkat, kunci publik, dan hardware fingerprint.
+  /// Bersifat idempoten: jika [fingerprint] telah terdaftar sebelumnya, server mengembalikan data
+  /// perangkat yang telah ada tanpa membuat entitas duplikat.
   Future<RegistrationResult> register({
     required String deviceName,
     required String publicKeyPem,
+    String fingerprint = '',
   }) async {
     final response = await apiClient.post(
       '/auth/v1/register',
       body: {
         'name': deviceName,
         'publicKey': publicKeyPem,
+        if (fingerprint.isNotEmpty) 'fingerprint': fingerprint,
       },
     );
 
@@ -52,18 +68,25 @@ class DeviceRegistration {
       );
     }
 
-    throw Exception('Pendaftaran perangkat gagal dengan kode: ${response.statusCode}');
+    throw Exception(
+      'Pendaftaran perangkat gagal dengan kode status: ${response.statusCode}',
+    );
   }
 
-  /// Mengecek status persetujuan perangkat ke svc-auth.
+  /// Memverifikasi status persetujuan perangkat pada server autentikasi.
   Future<DeviceStatusResult> checkStatus(String deviceId) async {
     final response = await apiClient.get('/auth/v1/register/$deviceId/status');
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body) as Map<String, dynamic>;
+      final createdAtMs = json['createdAt'] as int?;
       return DeviceStatusResult(
         deviceId: json['deviceId'] as String? ?? deviceId,
+        name: json['name'] as String?,
         status: _parseStatus(json['status'] as String?),
+        registeredAt: createdAtMs != null
+            ? DateTime.fromMillisecondsSinceEpoch(createdAtMs * 1000)
+            : null,
         token: json['token'] as String?,
       );
     }

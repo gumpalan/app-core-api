@@ -1,11 +1,16 @@
-/// Kontrak penyimpanan token autentikasi perangkat (bisa diimplementasikan dengan secure storage atau in-memory).
+/// Kontrak antarmuka penyimpanan token autentikasi perangkat.
 abstract class TokenStorage {
+  /// Membaca token otorisasi tersimpan, atau mengembalikan null jika belum ada.
   Future<String?> readToken();
+
+  /// Menyimpan token otorisasi.
   Future<void> writeToken(String token);
+
+  /// Menghapus token otorisasi dari media penyimpanan.
   Future<void> deleteToken();
 }
 
-/// Implementasi in-memory sederhana untuk pengujian dan scaffold.
+/// Implementasi in-memory sederhana untuk pengujian otomatis.
 class InMemoryTokenStorage implements TokenStorage {
   String? _token;
 
