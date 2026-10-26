@@ -50,6 +50,22 @@ class ApiClient {
     );
   }
 
+  Future<http.Response> put(String path, {Map<String, dynamic>? body}) async {
+    final uri = _resolveUri(path);
+    final headers = await _headers();
+    return _client.put(
+      uri,
+      headers: headers,
+      body: body != null ? jsonEncode(body) : null,
+    );
+  }
+
+  Future<http.Response> delete(String path) async {
+    final uri = _resolveUri(path);
+    final headers = await _headers();
+    return _client.delete(uri, headers: headers);
+  }
+
   void close() {
     _client.close();
   }
