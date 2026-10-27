@@ -1,23 +1,16 @@
 import 'dart:convert';
+
 import 'api_client.dart';
 
 /// Status siklus hidup pendaftaran perangkat.
-enum DeviceStatus {
-  pending,
-  approved,
-  revoked,
-  unknown,
-}
+enum DeviceStatus { pending, approved, revoked, unknown }
 
 /// Hasil respon pendaftaran perangkat baru.
 class RegistrationResult {
   final String deviceId;
   final DeviceStatus status;
 
-  const RegistrationResult({
-    required this.deviceId,
-    required this.status,
-  });
+  const RegistrationResult({required this.deviceId, required this.status});
 }
 
 /// Detail status persetujuan dan metadata perangkat dari server autentikasi.
@@ -91,10 +84,7 @@ class DeviceRegistration {
       );
     }
 
-    return DeviceStatusResult(
-      deviceId: deviceId,
-      status: DeviceStatus.unknown,
-    );
+    return DeviceStatusResult(deviceId: deviceId, status: DeviceStatus.unknown);
   }
 
   DeviceStatus _parseStatus(String? status) {
