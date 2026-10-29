@@ -1,7 +1,7 @@
+import 'package:core_api/core_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
-import 'package:core_api/core_api.dart';
 
 void main() {
   test('InMemoryTokenStorage read and write', () async {
@@ -18,10 +18,16 @@ void main() {
   test('DeviceRegistration register and checkStatus', () async {
     final mockClient = MockClient((request) async {
       if (request.url.path == '/auth/v1/register') {
-        return http.Response('{"deviceId":"dev_mock123","status":"pending"}', 202);
+        return http.Response(
+          '{"deviceId":"dev_mock123","status":"pending"}',
+          202,
+        );
       }
       if (request.url.path == '/auth/v1/register/dev_mock123/status') {
-        return http.Response('{"deviceId":"dev_mock123","status":"approved","token":"tok_mock_abc"}', 200);
+        return http.Response(
+          '{"deviceId":"dev_mock123","status":"approved","token":"tok_mock_abc"}',
+          200,
+        );
       }
       return http.Response('Not Found', 404);
     });
@@ -34,7 +40,10 @@ void main() {
     );
 
     final reg = DeviceRegistration(apiClient: apiClient);
-    final regResult = await reg.register(deviceName: 'My Phone', publicKeyPem: 'pubkey');
+    final regResult = await reg.register(
+      deviceName: 'My Phone',
+      publicKeyPem: 'pubkey',
+    );
     expect(regResult.deviceId, equals('dev_mock123'));
     expect(regResult.status, equals(DeviceStatus.pending));
 
